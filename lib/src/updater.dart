@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'weather_source.dart';
 import 'sources/remote_api_source.dart';
+import 'package:geolocator/geolocator.dart';
 
 class WeatherUpdater with WidgetsBindingObserver {
   Timer? _timer;
@@ -15,9 +16,13 @@ class WeatherUpdater with WidgetsBindingObserver {
   /// API key used for the remote weather service.
   final String apiKey;
 
+  /// Unit system preference (true for metric, false for imperial).
+  final bool isMetric;
+
   WeatherUpdater({
     required this.apiKey,
     required this.onWeatherUpdate,
+    this.isMetric = false,
   });
 
   void start() {
@@ -37,15 +42,18 @@ class WeatherUpdater with WidgetsBindingObserver {
 
   Future<void> _fetchAndUpdateWeather() async {
     try {
-      // Replace these with real geolocation calls
-      final double latitude = 40.07011;
-      final double longitude = -105.893;
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      final latitude = position.latitude;
+      final longitude = position.longitude;
 
       final source = RemoteApiSource(apiKey: apiKey);
       final data = await source.fetchWeather(
         latitude: latitude,
         longitude: longitude,
-        isMetric: false,
+        isMetric: isMetric,
       );
 
       onWeatherUpdate(data);
