@@ -10,13 +10,20 @@ abstract class WeatherSource {
 }
 
 class WeatherData {
-  final double temp;        // Already in the correct unit scale
-  final double humidity;
-  final String unitLabel;   // '°C' or '°F'
+  final double temp;            // Temperature in proper unit (C or F)
+  final double humidity;        // %
+  final String unitLabel;       // '°C' or '°F'
+
+  final double windSpeed;       // Wind speed in appropriate unit (m/s or mph)
+  final double windDirection;   // Wind direction in degrees
+  final double windGust;       // Optional wind gust in same unit as speed
 
   WeatherData({
     required this.temp,
     required this.humidity,
     required this.unitLabel,
+    required this.windSpeed,
+    required this.windDirection,
+    required this.windGust,
   });
 }

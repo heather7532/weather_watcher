@@ -10,20 +10,19 @@ class WeatherUpdater with WidgetsBindingObserver {
   Timer? _timer;
   Duration _fetchInterval = const Duration(minutes: 15);
 
-  /// Callback that is invoked when new weather data is fetched.
   final void Function(WeatherData data) onWeatherUpdate;
-
-  /// API key used for the remote weather service.
   final String apiKey;
-
-  /// Unit system preference (true for metric, false for imperial).
   final bool isMetric;
+
+  /// Optional custom weather source for testing or alternative sources.
+  final WeatherSource _source;
 
   WeatherUpdater({
     required this.apiKey,
     required this.onWeatherUpdate,
     this.isMetric = false,
-  });
+    WeatherSource? customSource, // optional injection
+  }) : _source = customSource ?? RemoteApiSource(apiKey: apiKey);
 
   void start() {
     WidgetsBinding.instance.addObserver(this);
@@ -49,15 +48,16 @@ class WeatherUpdater with WidgetsBindingObserver {
       final latitude = position.latitude;
       final longitude = position.longitude;
 
-      final source = RemoteApiSource(apiKey: apiKey);
-      final data = await source.fetchWeather(
+      final data = await _source.fetchWeather(
         latitude: latitude,
         longitude: longitude,
         isMetric: isMetric,
       );
 
       onWeatherUpdate(data);
-      print('[WeatherUpdater] Temp: ${data.temp} ${data.unitLabel}, Humidity: ${data.humidity}%');
+      print('[WeatherUpdater] Temp: ${data.temp} ${data.unitLabel}, '
+          'Humidity: ${data.humidity}%, '
+          'Wind: ${data.windSpeed} m/s @ ${data.windDirection}° (Gust: ${data.windGust} m/s)');
     } catch (e) {
       print('[WeatherUpdater] Error fetching weather data: $e');
     }
