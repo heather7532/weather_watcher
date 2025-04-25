@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:weather_watcher/src/updater.dart';
-import 'package:weather_watcher/src/weather_source.dart';
+import 'package:weather_watcher/updater.dart';
+import 'package:weather_watcher/models/weather_source.dart';
 
 const MethodChannel geolocatorChannel = MethodChannel('flutter.baseflow.com/geolocator');
 

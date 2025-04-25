@@ -13,6 +13,8 @@ dependencies:
     sdk: flutter
   geolocator: ^10.1.0
   http: ^1.1.0
+  flutter_reactive_ble: ^5.4.0  # or latest
+  permission_handler: ^11.0.1
 
 dev_dependencies:
   flutter_test:

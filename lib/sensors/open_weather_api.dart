@@ -2,7 +2,7 @@
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:weather_watcher/src/weather_source.dart';
+import 'package:weather_watcher/models/weather_source.dart';
 
 class RemoteApiSource implements WeatherSource {
   final String apiKey;
@@ -38,7 +38,7 @@ class RemoteApiSource implements WeatherSource {
     final unitLabel = isMetric ? '°C' : '°F';
 
     // Debug logging
-    // print('isMetric in remote_api_source.dart/fetchWeather: $isMetric');
+    // print('isMetric in open_weather_api.dart/fetchWeather: $isMetric');
     // print('WeatherData is going to return Temp: $temp, Humidity: $humidity, Wind Speed: $windSpeed, '
     //     'Wind Direction: $windDirection, Wind Gust: $windGust');
 

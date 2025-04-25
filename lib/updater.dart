@@ -2,8 +2,8 @@
 
 import 'dart:async';
 import 'package:flutter/widgets.dart';
-import 'weather_source.dart';
-import 'sources/remote_api_source.dart';
+import 'models/weather_source.dart';
+import 'sensors/open_weather_api.dart';
 import 'package:geolocator/geolocator.dart';
 
 class WeatherUpdater with WidgetsBindingObserver {
@@ -17,7 +17,7 @@ class WeatherUpdater with WidgetsBindingObserver {
   final double? latitude;
   final double? longitude;
 
-  /// Optional custom weather source for testing or alternative sources.
+  /// Optional custom weather source for testing or alternative sensors.
   final WeatherSource _source;
 
   WeatherUpdater({
@@ -41,12 +41,21 @@ class WeatherUpdater with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
   }
 
-  void _startTimer() {
-    _fetchAndUpdateWeather(); // initial fetch
-    _timer = Timer.periodic(_fetchInterval, (timer) => _fetchAndUpdateWeather());
+  /// Immediately fetches weather data, bypassing all interval checks.
+  Future<void> fetchNow(isMetric) async {
+    try {
+      await _fetchAndUpdateWeather(isMetric);
+    } catch (e, stack) {
+      debugPrint('[WeatherUpdater] fetchNow error: $e\n$stack');
+    }
   }
 
-  Future<void> _fetchAndUpdateWeather() async {
+  void _startTimer() {
+    _fetchAndUpdateWeather(isMetric); // initial fetch
+    _timer = Timer.periodic(_fetchInterval, (timer) => _fetchAndUpdateWeather(isMetric));
+  }
+
+  Future<void> _fetchAndUpdateWeather(isMetric) async {
     try {
       double lat, lon;
 
@@ -61,6 +70,7 @@ class WeatherUpdater with WidgetsBindingObserver {
         lon = position.longitude;
       }
 
+      print ('[WeatherUpdater] Fetching weather data for lat: $lat, lon: $lon, isMetric: $isMetric');
       final data = await _source.fetchWeather(
         latitude: lat,
         longitude: lon,
