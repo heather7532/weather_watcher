@@ -134,25 +134,13 @@ class SensorPush extends SensorData {
       // Scan for devices with the specified name
       await BleUtils.scanForSupportedDevices(
         supportedNames: supportedSensorNames,
-        scanDuration: const Duration(seconds: 2),
+        scanDuration: const Duration(milliseconds: 2500),
       );
 
       final connection = _ble.connectToDevice(id: deviceId);
       await for (final state in connection) {
         if (state.connectionState == DeviceConnectionState.connected) {
           if (kDebugMode) print('✅ Connected to $deviceId');
-
-          // // Read temperature
-          // if (kDebugMode) {
-          //   print('Reading SensorPush characteristics...');
-          // }
-          // final tempBytes = await BleUtils.readCharacteristic(
-          //   deviceId: deviceId,
-          //   serviceUuid: serviceUuid,
-          //   characteristicUuid: tempCharUuid,
-          //   capabilities: ['read'],
-          // );
-          // returnValue['temperature_C'] = parseTemperature(Uint8List.fromList(tempBytes));
 
           // Read humidity
           final humidBytes = await BleUtils.readCharacteristic(
@@ -188,6 +176,47 @@ class SensorPush extends SensorData {
     }
 
     // ✅ Safety net return to satisfy Dart's non-nullable type checker
+    return {'error': 'Unexpected exit without data'};
+  }
+
+  /// Reads only the battery voltage from the sensor.
+  Future<Map<String, dynamic>> getBatteryVoltage({required String deviceId}) async {
+    final serviceUuid = Uuid.parse(id); // The SensorPush service UUID
+    final voltageUuid = Uuid.parse('EF090007-11D6-42BA-93B8-9DD7EC090AA9');
+
+    try {
+      // Scan for devices (short duration for discovery, optional if already connected)
+      await BleUtils.scanForSupportedDevices(
+        supportedNames: supportedSensorNames,
+        scanDuration: const Duration(seconds: 1),
+      );
+
+      final connection = _ble.connectToDevice(id: deviceId);
+      await for (final state in connection) {
+        if (state.connectionState == DeviceConnectionState.connected) {
+          if (kDebugMode) print('✅ Connected to $deviceId for battery voltage');
+
+          final voltageBytes = await BleUtils.readCharacteristic(
+            deviceId: deviceId,
+            serviceUuid: serviceUuid,
+            characteristicUuid: voltageUuid,
+            capabilities: ['read'],
+          );
+
+          final batteryData = parseBatteryVoltage(Uint8List.fromList(voltageBytes));
+          return {
+            'voltage_mV': batteryData['voltage_mV'],
+          };
+        } else if (state.connectionState == DeviceConnectionState.disconnected) {
+          if (kDebugMode) print('❌ Disconnected from $deviceId');
+          return {'error': 'Disconnected before read'};
+        }
+      }
+    } catch (e) {
+      print('❌ GATT connection error: $e');
+      return {'error': e.toString()};
+    }
+
     return {'error': 'Unexpected exit without data'};
   }
 }

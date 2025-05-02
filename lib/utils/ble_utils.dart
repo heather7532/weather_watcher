@@ -1,7 +1,6 @@
 // lib/utils/ble_utils.dart
 
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -29,6 +28,8 @@ class BleUtils {
       _deviceController.stream;
 
   final location = loc.Location();
+
+  static bool _isScanning = false;
 
 
   Future<void> ensurePermissions() async {
@@ -67,7 +68,7 @@ class BleUtils {
   }
 
   static Future<List<DiscoveredDevice>> scanForSupportedSensors({
-    Duration scanDuration = const Duration(milliseconds: 700),
+    Duration scanDuration = const Duration(milliseconds: 1500),
     required List<String> supportedSensorNames,
   }) async {
     return scanForSupportedDevices(
@@ -76,44 +77,38 @@ class BleUtils {
     );
   }
 
-  /// Scans for BLE devices and filters results by supported names.
-  /// Returns a list of matching DiscoveredDevice entries (name, id, rssi).
   static Future<List<DiscoveredDevice>> scanForSupportedDevices({
     required List<String> supportedNames,
-    Duration scanDuration = const Duration(seconds: 1), // Good default
+    Duration scanDuration = const Duration(milliseconds: 1500),
   }) async {
-    final Completer<List<DiscoveredDevice>> completer = Completer();
-    final Map<String, DiscoveredDevice> filteredMap = {};
+    final completer = Completer<List<DiscoveredDevice>>();
+    final Map<String, DiscoveredDevice> matches = {};
+    final Set<String> nameFilters = supportedNames.map((s) => s.toLowerCase()).toSet();
 
-    final sub = _ble.scanForDevices(
-      withServices: [], // Empty: match all services
-      scanMode: ScanMode.lowLatency,
-    ).listen((device) {
-      final name = device.name.toLowerCase();
-      final match = supportedNames.any((s) => name.contains(s.toLowerCase()));
+    late final StreamSubscription<DiscoveredDevice> sub;
 
-      if (match) {
-        filteredMap[device.id] = device;
-        if (kDebugMode) {
-          print('✅ Matched: ${device.name} [${device.id}] RSSI: ${device.rssi}');
+    try {
+      sub = _ble.scanForDevices(
+        withServices: [],
+        scanMode: ScanMode.lowLatency,
+      ).listen((device) {
+        final name = device.name.toLowerCase();
+        if (nameFilters.any((filter) => name.contains(filter))) {
+          matches[device.id] = device;
+          if (kDebugMode) {
+            print('✅ Matched: ${device.name} [${device.id}] RSSI: ${device.rssi}');
+          }
         }
-      }
-    }, onError: (e) {
+      });
+
+      await Future.delayed(scanDuration);
+    } catch (e) {
       if (kDebugMode) print('❌ Scan error: $e');
-      if (!completer.isCompleted) completer.complete([]);
-    });
-
-    // Wait for scanDuration, then cancel and complete
-    Future.delayed(scanDuration).then((_) async {
-      await sub.cancel(); // Only cancel this local subscription
-      if (!completer.isCompleted) {
-        completer.complete(filteredMap.values.toList());
-      }
-    });
-
-    return completer.future;
+    } finally {
+      await sub.cancel(); // important: cancel to avoid dangling scan
+      return matches.values.toList();
+    }
   }
-
 
 
   static Future<void> startBleScan() async {

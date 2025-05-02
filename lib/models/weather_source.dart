@@ -17,6 +17,8 @@ class WeatherData {
   final double windSpeed;       // Wind speed in appropriate unit (m/s or mph)
   final double windDirection;   // Wind direction in degrees
   final double windGust;       // Optional wind gust in same unit as speed
+  final String icon;            // Icon ID for current weather
+  final String source;          // Code to indicate what weather api was used
 
   WeatherData({
     required this.temp,
@@ -25,5 +27,7 @@ class WeatherData {
     required this.windSpeed,
     required this.windDirection,
     required this.windGust,
+    required this.icon,
+    required this.source,
   });
 }

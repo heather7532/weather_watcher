@@ -4,10 +4,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:weather_watcher/models/weather_source.dart';
 
-class RemoteApiSource implements WeatherSource {
+class OpenWeatherApi implements WeatherSource {
   final String apiKey;
 
-  RemoteApiSource({required this.apiKey});
+  OpenWeatherApi({required this.apiKey});
 
   @override
   Future<WeatherData> fetchWeather({
@@ -21,7 +21,7 @@ class RemoteApiSource implements WeatherSource {
     );
 
     // debug print url
-    print('Fetching weather data from: $url');
+    // print('Fetching weather data from: $url');
 
     final response = await http.get(url);
     if (response.statusCode != 200) {
@@ -35,6 +35,8 @@ class RemoteApiSource implements WeatherSource {
     final windSpeed = (json['wind']['speed'] as num?)?.toDouble() ?? 0.0;
     final windDirection = (json['wind']['deg'] as num?)?.toDouble() ?? 0.0;
     final windGust = (json['wind']['gust'] as num?)?.toDouble() ?? windSpeed;
+    final icon = (json['weather'] as List?)?.first?['icon'] as String? ?? 'unknown';
+    final source = "openweather";
     final unitLabel = isMetric ? '°C' : '°F';
 
     // Debug logging
@@ -49,6 +51,8 @@ class RemoteApiSource implements WeatherSource {
       windSpeed: windSpeed,
       windDirection: windDirection,
       windGust: windGust,
+      icon: icon,
+      source: source,
     );
   }
 }

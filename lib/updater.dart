@@ -28,7 +28,7 @@ class WeatherUpdater with WidgetsBindingObserver {
     this.longitude,
     Duration? fetchInterval,
     WeatherSource? customSource,
-  })  : _source = customSource ?? RemoteApiSource(apiKey: apiKey),
+  })  : _source = customSource ?? OpenWeatherApi(apiKey: apiKey),
         _fetchInterval = fetchInterval ?? const Duration(minutes: 10); // ⏱️ updated to 10 min
 
   void start() {
