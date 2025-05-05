@@ -25,7 +25,8 @@ class OpenWeatherApi implements WeatherSource {
 
     final response = await http.get(url);
     if (response.statusCode != 200) {
-      throw Exception('Failed to fetch weather data');
+      print('🔍 OpenWeather response: ${response.statusCode} ${response.body}');
+      throw Exception('Failed to fetch weather data: ${response.statusCode} ${response.body}');
     }
 
     final json = jsonDecode(response.body);

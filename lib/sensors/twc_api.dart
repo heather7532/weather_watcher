@@ -28,13 +28,14 @@ class TwcApi implements WeatherSource {
     }
 
     final json = jsonDecode(response.body);
+    // print('TWC JSON Response: ${response.body}');
 
     final temp = (json['temperature'] as num?)?.toDouble() ?? 0.0;
     final humidity = (json['relativeHumidity'] as num?)?.toDouble() ?? 0.0;
     final windSpeed = (json['windSpeed'] as num?)?.toDouble() ?? 0.0;
     final windDirection = (json['windDirection'] as num?)?.toDouble() ?? 0.0;
     final windGust = (json['windGust'] as num?)?.toDouble() ?? windSpeed;
-    final icon = json['wx_icon']?.toString() ?? '';
+    final icon = json['iconCode']?.toString() ?? '';
     final unitLabel = isMetric ? '°C' : '°F';
 
     return WeatherData(
