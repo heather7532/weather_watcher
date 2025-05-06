@@ -21,15 +21,12 @@ class BleUtils {
   static final Map<String, DiscoveredDevice> _deviceMap = {};
   static StreamSubscription<DiscoveredDevice>? _scanSubscription;
   static StreamSubscription<ConnectionStateUpdate>? _connection;
-  static QualifiedCharacteristic? _connectedCharacteristic;
   static Duration scanDuration = const Duration(milliseconds: 500);
 
   static Stream<List<DiscoveredDevice>> get devicesStream =>
       _deviceController.stream;
 
   final location = loc.Location();
-
-  static bool _isScanning = false;
 
 
   Future<void> ensurePermissions() async {
@@ -68,24 +65,16 @@ class BleUtils {
   }
 
   static Future<List<DiscoveredDevice>> scanForSupportedSensors({
-    Duration scanDuration = const Duration(milliseconds: 1500),
-    required List<String> supportedSensorNames,
-  }) async {
-    return scanForSupportedDevices(
-      supportedNames: supportedSensorNames,
-      scanDuration: scanDuration,
-    );
-  }
-
-  static Future<List<DiscoveredDevice>> scanForSupportedDevices({
     required List<String> supportedNames,
-    Duration scanDuration = const Duration(milliseconds: 1500),
+    Duration scanDuration = const Duration(milliseconds: 2500),
   }) async {
     final completer = Completer<List<DiscoveredDevice>>();
     final Map<String, DiscoveredDevice> matches = {};
     final Set<String> nameFilters = supportedNames.map((s) => s.toLowerCase()).toSet();
 
     late final StreamSubscription<DiscoveredDevice> sub;
+
+    print('🔍 Starting BLE scanForSupportedSensors with names: $nameFilters');
 
     try {
       sub = _ble.scanForDevices(
@@ -94,9 +83,11 @@ class BleUtils {
       ).listen((device) {
         final name = device.name.toLowerCase();
         if (nameFilters.any((filter) => name.contains(filter))) {
-          matches[device.id] = device;
-          if (kDebugMode) {
-            print('✅ Matched: ${device.name} [${device.id}] RSSI: ${device.rssi}');
+          if (!matches.containsKey(device.id)) {
+            matches[device.id] = device;
+            if (kDebugMode) {
+              print('✅ Matched: ${device.name} [${device.id}] RSSI: ${device.rssi}');
+            }
           }
         }
       });
@@ -105,11 +96,10 @@ class BleUtils {
     } catch (e) {
       if (kDebugMode) print('❌ Scan error: $e');
     } finally {
-      await sub.cancel(); // important: cancel to avoid dangling scan
+      await sub.cancel();
       return matches.values.toList();
     }
   }
-
 
   static Future<void> startBleScan() async {
     // ⛳ Step 1: Permission check
@@ -129,7 +119,7 @@ class BleUtils {
     }
 
 // 🕒 Recheck after delay (iOS workaround)
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(seconds: 2));
     permission = await location.hasPermission();
 
     if (permission != loc.PermissionStatus.granted) {

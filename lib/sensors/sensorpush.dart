@@ -132,7 +132,7 @@ class SensorPush extends SensorData {
 
     try {
       // Scan for devices with the specified name
-      await BleUtils.scanForSupportedDevices(
+      await BleUtils.scanForSupportedSensors(
         supportedNames: supportedSensorNames,
         scanDuration: const Duration(milliseconds: 2500),
       );
@@ -186,7 +186,7 @@ class SensorPush extends SensorData {
 
     try {
       // Scan for devices (short duration for discovery, optional if already connected)
-      await BleUtils.scanForSupportedDevices(
+      await BleUtils.scanForSupportedSensors(
         supportedNames: supportedSensorNames,
         scanDuration: const Duration(seconds: 1),
       );
