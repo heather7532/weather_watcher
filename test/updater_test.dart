@@ -18,7 +18,7 @@ class MockWeatherSource implements WeatherSource {
       unitLabel: isMetric ? '°C' : '°F',
       windSpeed: isMetric ? 5.0 : 11.2,
       windDirection: 225.0,
-      windGust: isMetric ? 7.5 : 16.7,
+      windGust: isMetric ? 7.5 : 16.7, icon: '', source: '',
     );
   }
 }

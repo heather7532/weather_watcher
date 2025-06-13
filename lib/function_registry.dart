@@ -10,7 +10,6 @@ class FunctionRegistry {
     'connectToDevice': _callConnectToDevice,
     'disconnect': _callDisconnect,
     'discoverServices': _callDiscoverServices,
-    // Add more as needed
   };
 
   static Future<dynamic> _callReadCharacteristic(Map<String, dynamic> params) async {

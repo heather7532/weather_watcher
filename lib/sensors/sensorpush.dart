@@ -140,7 +140,7 @@ class SensorPush extends SensorData {
       final connection = _ble.connectToDevice(id: deviceId);
       await for (final state in connection) {
         if (state.connectionState == DeviceConnectionState.connected) {
-          if (kDebugMode) print('✅ Connected to $deviceId');
+          debugPrint('✅ Connected to $deviceId');
 
           // Read humidity
           final humidBytes = await BleUtils.readCharacteristic(
@@ -166,12 +166,12 @@ class SensorPush extends SensorData {
 
           return returnValue;
         } else if (state.connectionState == DeviceConnectionState.disconnected) {
-          if (kDebugMode) print('❌ Disconnected from $deviceId');
+          debugPrint('❌ Disconnected from $deviceId');
           return {'error': 'Disconnected before read'};
         }
       }
     } catch (e) {
-      print('❌ GATT connection error: $e');
+      debugPrint('❌ GATT connection error: $e');
       return {'error': e.toString()};
     }
 
@@ -194,7 +194,7 @@ class SensorPush extends SensorData {
       final connection = _ble.connectToDevice(id: deviceId);
       await for (final state in connection) {
         if (state.connectionState == DeviceConnectionState.connected) {
-          if (kDebugMode) print('✅ Connected to $deviceId for battery voltage');
+          debugPrint('✅ Connected to $deviceId for battery voltage');
 
           final voltageBytes = await BleUtils.readCharacteristic(
             deviceId: deviceId,
@@ -208,12 +208,12 @@ class SensorPush extends SensorData {
             'voltage_mV': batteryData['voltage_mV'],
           };
         } else if (state.connectionState == DeviceConnectionState.disconnected) {
-          if (kDebugMode) print('❌ Disconnected from $deviceId');
+          debugPrint('❌ Disconnected from $deviceId');
           return {'error': 'Disconnected before read'};
         }
       }
     } catch (e) {
-      print('❌ GATT connection error: $e');
+      debugPrint('❌ GATT connection error: $e');
       return {'error': e.toString()};
     }
 

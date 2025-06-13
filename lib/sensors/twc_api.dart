@@ -20,7 +20,6 @@ class TwcApi implements WeatherSource {
       'https://api.weather.com/v3/wx/observations/current?geocode=$latitude,$longitude&units=$units&language=en-US&format=json&apiKey=$apiKey',
     );
 
-    // print('Fetching weather data from TWC: $url');
 
     final response = await http.get(url);
     if (response.statusCode != 200) {
@@ -28,8 +27,6 @@ class TwcApi implements WeatherSource {
     }
 
     final json = jsonDecode(response.body);
-    // print('TWC JSON Response: ${response.body}');
-
     final temp = (json['temperature'] as num?)?.toDouble() ?? 0.0;
     final humidity = (json['relativeHumidity'] as num?)?.toDouble() ?? 0.0;
     final windSpeed = (json['windSpeed'] as num?)?.toDouble() ?? 0.0;

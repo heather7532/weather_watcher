@@ -70,7 +70,7 @@ class WeatherUpdater with WidgetsBindingObserver {
         lon = position.longitude;
       }
 
-      print ('[WeatherUpdater] Fetching weather data for lat: $lat, lon: $lon, isMetric: $isMetric');
+      debugPrint ('[WeatherUpdater] Fetching weather data for lat: $lat, lon: $lon, isMetric: $isMetric');
       final data = await _source.fetchWeather(
         latitude: lat,
         longitude: lon,
@@ -79,11 +79,11 @@ class WeatherUpdater with WidgetsBindingObserver {
 
       onWeatherUpdate(data);
 
-      print('[WeatherUpdater] Temp: ${data.temp} ${data.unitLabel}, '
+      debugPrint('[WeatherUpdater] Temp: ${data.temp} ${data.unitLabel}, '
           'Humidity: ${data.humidity}%, '
           'Wind: ${data.windSpeed} @ ${data.windDirection}° (Gust: ${data.windGust})');
     } catch (e) {
-      print('[WeatherUpdater] Error fetching weather data: $e');
+      debugPrint('[WeatherUpdater] Error fetching weather data: $e');
     }
   }
 

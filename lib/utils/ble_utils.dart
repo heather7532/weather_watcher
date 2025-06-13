@@ -5,8 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:location/location.dart' as loc;
-
-import '../models/ble_characteristic.dart';
+import 'package:weather_watcher/models/ble_characteristic.dart';
 import 'gatt_constants.dart';
 
 /// List of supported BLE sensor name substrings
@@ -39,7 +38,7 @@ class BleUtils {
       if (!serviceEnabled) {
         // Location services are not enabled, exit.  Request user permission
         // to enable location services.
-        if (kDebugMode) print("❌ Location services are not enabled.");
+        debugPrint("❌ Location services are not enabled.");
         return;
       }
     } else {
@@ -49,12 +48,12 @@ class BleUtils {
         permissionStatus = await location.requestPermission();
         if (permissionStatus != loc.PermissionStatus.granted) {
           // Permission not granted, exit.
-          if (kDebugMode) print("❌ Location permission not granted.");
+          debugPrint("❌ Location permission not granted.");
           return;
         }
       } else if (permissionStatus == loc.PermissionStatus.deniedForever) {
         // Permission denied forever, show a message to the user.
-        if (kDebugMode) print("❌ Location permission denied forever.");
+        debugPrint("❌ Location permission denied forever.");
         openAppSettings();
         if (permissionStatus != loc.PermissionStatus.granted) {
           // Location services are still not enabled, exit.
@@ -74,7 +73,7 @@ class BleUtils {
 
     late final StreamSubscription<DiscoveredDevice> sub;
 
-    print('🔍 Starting BLE scanForSupportedSensors with names: $nameFilters');
+    debugPrint('🔍 Starting BLE scanForSupportedSensors with names: $nameFilters');
 
     try {
       sub = _ble.scanForDevices(
@@ -85,16 +84,14 @@ class BleUtils {
         if (nameFilters.any((filter) => name.contains(filter))) {
           if (!matches.containsKey(device.id)) {
             matches[device.id] = device;
-            if (kDebugMode) {
-              print('✅ Matched: ${device.name} [${device.id}] RSSI: ${device.rssi}');
-            }
+            debugPrint('✅ Matched: ${device.name} [${device.id}] RSSI: ${device.rssi}');
           }
         }
       });
 
       await Future.delayed(scanDuration);
     } catch (e) {
-      if (kDebugMode) print('❌ Scan error: $e');
+      debugPrint('❌ Scan error: $e');
     } finally {
       await sub.cancel();
       return matches.values.toList();
@@ -132,7 +129,7 @@ class BleUtils {
     // 🧠 Step 2: Wait until BLE is powered on
     final bleStatus =
         await _ble.statusStream.firstWhere((s) => s == BleStatus.ready);
-    if (kDebugMode) print("✅ BLE is ready: $bleStatus");
+    debugPrint("✅ BLE is ready: $bleStatus");
 
     // 🧼 Step 3: Clean previous data
     _deviceMap.clear();
@@ -147,14 +144,14 @@ class BleUtils {
       _deviceController.add(_deviceMap.values.toList());
     },
         onError: (err) => {
-              if (kDebugMode) print("❌ Scan error: $err"),
+              debugPrint("❌ Scan error: $err"),
             });
   }
 
   static void stopBleScan() {
     _scanSubscription?.cancel();
     _scanSubscription = null;
-    if (kDebugMode) print("🛑 Scan stopped.");
+    debugPrint("🛑 Scan stopped.");
   }
 
   static void dispose() {
@@ -179,7 +176,7 @@ class BleUtils {
       connectionTimeout: const Duration(milliseconds: 500),
     )
         .listen((update) {
-      if (kDebugMode) print("🔗 Connection state: ${update.connectionState}");
+      debugPrint("🔗 Connection state: ${update.connectionState}");
       if (update.connectionState == DeviceConnectionState.connected) {
         completer.complete();
       } else if (update.connectionState == DeviceConnectionState.disconnected) {
@@ -189,7 +186,7 @@ class BleUtils {
       }
     }, onError: (err) {
       if (!completer.isCompleted) {
-        if (kDebugMode) print("❌ Connection error: $err");
+        debugPrint("❌ Connection error: $err");
         completer.completeError(err);
       }
     });
@@ -204,8 +201,7 @@ class BleUtils {
     required List<String> capabilities,
   }) async {
     if (!capabilities.contains('read')) {
-      if (kDebugMode)
-        print("⚠️ Characteristic $characteristicUuid is not readable.");
+      debugPrint("⚠️ Characteristic $characteristicUuid is not readable.");
       return Future.error("Characteristic is not readable.");
     }
 
@@ -216,18 +212,17 @@ class BleUtils {
     );
 
     try {
-      if (kDebugMode)
-        print("📄 Attempting read from characteristic: "
+      debugPrint("📄 Attempting read from characteristic: "
             "deviceId=$deviceId, "
             "serviceUuid=$serviceUuid, "
             "characteristicUuid=$characteristicUuid, "
             "capabilities=$capabilities");
       final result = await _ble.readCharacteristic(qualifiedChar);
-      if (kDebugMode) print("✅ Read success for $characteristicUuid: $result");
+      debugPrint("✅ Read success for $characteristicUuid: $result");
       return result;
       // remove retry logic
     } catch (e) {
-      if (kDebugMode) print("❌ Read failed for $characteristicUuid: $e");
+      debugPrint("❌ Read failed for $characteristicUuid: $e");
       return Future.error("Read failed: $e");
     }
   }
@@ -246,9 +241,9 @@ class BleUtils {
 
     try {
       await _ble.writeCharacteristicWithResponse(qualifiedChar, value: value);
-      if (kDebugMode) print("✅ Write success to $characteristicUuid: $value");
+      debugPrint("✅ Write success to $characteristicUuid: $value");
     } catch (e) {
-      if (kDebugMode) print("❌ Write failed for $characteristicUuid: $e");
+      debugPrint("❌ Write failed for $characteristicUuid: $e");
       rethrow;
     }
   }
@@ -256,7 +251,7 @@ class BleUtils {
   static Future<void> disconnect() async {
     await _connection?.cancel();
     _connection = null;
-    if (kDebugMode) print("🔌 Disconnected from device");
+    debugPrint("🔌 Disconnected from device");
   }
 
   // Connect to a device and check its GATT services and characteristics
@@ -264,13 +259,13 @@ class BleUtils {
   static Future<Map<String, List<BleCharacteristic>>> connectAndCheckGatt(
       String deviceId) async {
     final result = <String, List<BleCharacteristic>>{};
-    if (kDebugMode) print('🔌 Attempting connection to $deviceId');
+    debugPrint('🔌 Attempting connection to $deviceId');
 
     try {
       final connection = _ble.connectToDevice(id: deviceId);
       await for (final state in connection) {
         if (state.connectionState == DeviceConnectionState.connected) {
-          if (kDebugMode) print('✅ Connected to $deviceId');
+          debugPrint('✅ Connected to $deviceId');
 
           final services = await _ble.discoverServices(deviceId);
           for (final service in services) {
@@ -304,7 +299,7 @@ class BleUtils {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('❌ GATT connection error: $e');
+      debugPrint('❌ GATT connection error: $e');
       rethrow;
     }
 
